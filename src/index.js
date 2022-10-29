@@ -9,20 +9,77 @@ app.use(cors());
 
 const users = [];
 
+/*
+ * user : {
+    name ,
+    username,
+    pro,
+
+ }
+  
+*/
+
+/*
+ * Para que esse teste passe, você deve permitir que o middleware
+ **checksExistsUserAccount** receba um username pelo header do request
+  e caso um usuário com o mesmo username exista, ele deve ser colocado 
+  dentro de `request.user` e, ao final, retorne a chamada da função `next`.
+
+  Atente-se bem para o nome da propriedade que armazenará o objeto `user` 
+  no request.
+ */
+
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+
+  const user = users.find(user => user.username === username);
+
+  if (!user) {
+    return response.status(404).json({ error: "User not found" });
+  }
+
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request.headers;
+
+  return (user.pro || (user.todos.length < 10)) ? next() : response.status(403).json({error: "error"});
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params
+  const user = users.find(user => user.username === username);
+
+  const idExist = user.todos.find(todo => todo.id === id);
+
+  if (id.length < 9) {
+    return response.status(400).json({error: "id invalid"});
+  }
+
+  if (!user || !idExist) {
+    return response.status(404).json({error: "User not found"});
+  }
+
+  request.todo = idExist;
+  request.user = user;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const user = users.find(user => user.id === id);
+
+  if (!user) {
+    return response.status(404).json({ error: "User not found" });
+  }
+
+  request.user = user;
+  return next();
 }
 
 app.post('/users', (request, response) => {
